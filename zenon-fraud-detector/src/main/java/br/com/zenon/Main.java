@@ -2,9 +2,11 @@ package br.com.zenon;
 
 import br.com.zenon.fraud.Transaction;
 import br.com.zenon.fraud.TransactionCustomer;
+import br.com.zenon.fraud.TransactionIngestor;
 import br.com.zenon.fraud.TransactionType;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -22,5 +24,11 @@ public class Main {
 
         IO.println(transaction1);
         IO.println(transaction2);
+
+        IO.println("---------------------------------------------------------");
+
+        List<Transaction> transactions = new TransactionIngestor().read("data/PS_20174392719_1491204439457_log.csv");
+        transactions.stream().limit(10).forEach(IO::println);
+
     }
 }
