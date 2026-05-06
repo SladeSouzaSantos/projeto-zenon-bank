@@ -30,5 +30,10 @@ public class Main {
         List<Transaction> transactions = new TransactionIngestor().read("data/PS_20174392719_1491204439457_log.csv");
         transactions.stream().limit(10).forEach(IO::println);
 
+        IO.println("---------------------------------------------------------");
+
+        List<Transaction> transactionsWithErrors = new TransactionIngestor().read("data/paysim_with_bad_data.csv");
+        transactionsWithErrors.forEach(IO::println);
+
     }
 }
