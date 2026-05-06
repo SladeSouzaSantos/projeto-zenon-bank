@@ -1,12 +1,10 @@
 package br.com.zenon;
 
-import br.com.zenon.fraud.Transaction;
-import br.com.zenon.fraud.TransactionCustomer;
-import br.com.zenon.fraud.TransactionIngestor;
-import br.com.zenon.fraud.TransactionType;
+import br.com.zenon.fraud.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -32,8 +30,32 @@ public class Main {
 
         IO.println("---------------------------------------------------------");
 
-        List<Transaction> transactionsWithErrors = new TransactionIngestor().read("data/paysim_with_bad_data.csv");
-        transactionsWithErrors.forEach(IO::println);
+        List<Transaction> transactionsFileWithErrors = new TransactionIngestor().read("data/paysim_with_bad_data.csv");
+        transactionsFileWithErrors.forEach(IO::println);
+
+        IO.println("---------------------------------------------------------");
+
+        FraudAnalyzer fraudAnalyzer = new FraudAnalyzer(transactions);
+
+        long totalFrauds = fraudAnalyzer.countFrauds();
+        IO.println("Total de fraudes: " + totalFrauds);
+
+        IO.println("\nTop 3 fraudes de maior valor:");
+        List<BigDecimal> highestFraudAmounts = fraudAnalyzer.findHighestValueFraudAmounts(3);
+        highestFraudAmounts.forEach(amount -> IO.println("%.2f".formatted(amount)));
+
+        IO.println("\nTop 5 clientes suspeitos:");
+        List<String> suspiciousClients = fraudAnalyzer.findTopSuspiciousClients(5);
+        suspiciousClients.forEach(IO::println);
+
+        IO.println("\nPrejuízo total causado pelas fraudes:");
+        BigDecimal totalFraudLoss = fraudAnalyzer.calculateTotalFraudLoss();
+        IO.println("Prejuízo total: " + totalFraudLoss);
+
+        IO.println("\nQuantidade de fraudes por tipo:");
+        Map<TransactionType, Long> fraudCountByType = fraudAnalyzer.countFraudsByType();
+        IO.println("Fraudes por tipo:");
+        fraudCountByType.forEach((type, count) -> IO.println("- %s:  %d".formatted(type, count)));
 
     }
 }
