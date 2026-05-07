@@ -57,5 +57,35 @@ public class Main {
         IO.println("Fraudes por tipo:");
         fraudCountByType.forEach((type, count) -> IO.println("- %s:  %d".formatted(type, count)));
 
+        IO.println("---------------------------------------------------------");
+
+        TransactionRepository transactionRepository = new TransactionListRepository(transactions);
+
+        String notFoundOriginNameExample = "C12345";
+        transactionRepository.findTransactionByName(notFoundOriginNameExample);
+
+        String foundOriginNameExample = "C1231006815";
+        transactionRepository.findTransactionByName(foundOriginNameExample);
+
+        String lastOriginNameExample = "C1868032458";
+
+        long startTime = System.nanoTime();
+
+        transactionRepository.findTransactionByName(lastOriginNameExample);
+
+        long endTime = System.nanoTime();
+
+        IO.println("TransactionListRepository Demorou: " + ((endTime - startTime)/1_000_000) + "ms.");
+
+        transactionRepository = new TransactionMapRepository(transactions);
+
+        startTime = System.nanoTime();
+
+        transactionRepository.findTransactionByName(lastOriginNameExample);
+
+        endTime = System.nanoTime();
+
+        IO.println("TransactionMapRepository Demorou: " + ((endTime - startTime)/1_000_000) + "ms.");
+
     }
 }
