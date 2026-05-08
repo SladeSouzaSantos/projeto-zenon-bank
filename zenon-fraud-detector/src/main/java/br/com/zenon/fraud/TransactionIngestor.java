@@ -1,6 +1,5 @@
 package br.com.zenon.fraud;
 
-import java.io.*;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +20,8 @@ public class TransactionIngestor {
                     .limit(FRAUD_LIMIT)
                     .map(this::parseTransaction)
                     .filter(Optional::isPresent)
-                    .map(Optional::get).toList();
+                    .map(Optional::get)
+                    .toList();
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao ler o arquivo, via NIO: " + fileName, e);
@@ -32,9 +32,9 @@ public class TransactionIngestor {
         try {
             String[] transactionFields = line.split(",");
 
-            validated(transactionFields);
+            validateFields(transactionFields);
 
-            Long split = Long.parseLong(transactionFields[0]);
+            int split = Integer.parseInt(transactionFields[0]);
             TransactionType type = TransactionType.valueOf(transactionFields[1]);
             BigDecimal amount = new BigDecimal(transactionFields[2]);
             TransactionCustomer origin = new TransactionCustomer(transactionFields[3], new BigDecimal(transactionFields[4]), new BigDecimal(transactionFields[5]));
@@ -49,7 +49,7 @@ public class TransactionIngestor {
         }
     }
 
-    private static void validated(String[] transactionFields) {
+    private static void validateFields(String[] transactionFields) {
         List<String> errors = new ArrayList<>();
 
         if (Arrays.stream(TransactionType.values()).noneMatch(t -> t.name().equals(transactionFields[1])))

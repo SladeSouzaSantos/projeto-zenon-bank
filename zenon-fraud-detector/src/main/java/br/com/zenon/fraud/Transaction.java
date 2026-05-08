@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 public record Transaction(
-        Long step,
+        int step,
         TransactionType type,
         BigDecimal amount,
         TransactionCustomer origin,
