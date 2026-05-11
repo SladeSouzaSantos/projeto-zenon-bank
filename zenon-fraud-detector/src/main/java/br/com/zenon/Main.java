@@ -16,9 +16,14 @@ public class Main {
 
     void main(String[] args) {
         language = args.length > 0 ? args[0] : "pt";
+        Locale locale = switch (language.toLowerCase()) {
+            case "en" -> Locale.US;
+            default -> Locale.of("pt", "BR");
+        };
+
         List<Transaction> transactions = new TransactionIngestor().read("data/PS_20174392719_1491204439457_log.csv");
 
-        runEfficientNioReport();
+        runEfficientNioReport(locale);
 
         showManualInstantiation();
 
@@ -32,27 +37,19 @@ public class Main {
 
     }
 
-    private static void runEfficientNioReport() {
-        Locale locale = Locale.of(language);
-
-        NumberFormat integerFormatter = NumberFormat.getIntegerInstance(locale);
-        NumberFormat currencyFormatter = DecimalFormat.getCurrencyInstance(locale);
-
-        String currencyCode = language.equals("pt") ? "BRL" : "USD";
-        currencyFormatter.setCurrency(Currency.getInstance(currencyCode));
-
-        ResourceBundle reportBundle = ResourceBundle.getBundle("report", locale);
+    private static void runEfficientNioReport(Locale locale) {
+        var context = ReportContext.of(locale);
 
         TransactionReport transactionReport = new TransactionReport();
         Statistics statistics = transactionReport.generateReport("data/PS_20174392719_1491204439457_log.csv");
 
-        String formattedTotalTransactions = integerFormatter.format(statistics.totalTransactions());
-        String formattedTotalFrauds = integerFormatter.format(statistics.totalFrauds());
-        String formattedTotalAmount = currencyFormatter.format(statistics.totalAmount());
+        String formattedTotalTransactions = context.integer().format(statistics.totalTransactions());
+        String formattedTotalFrauds = context.integer().format(statistics.totalFrauds());
+        String formattedTotalAmount = context.currency().format(statistics.totalAmount());
 
-        String msgTotalTransactions = reportBundle.getString("label.total.transactions");
-        String msgTotalFrauds = reportBundle.getString("label.total.frauds");
-        String msgTotalAmount = reportBundle.getString("label.total.amount");
+        String msgTotalTransactions = context.bundle().getString("label.total.transactions");
+        String msgTotalFrauds = context.bundle().getString("label.total.frauds");
+        String msgTotalAmount = context.bundle().getString("label.total.amount");
 
         IO.println("""
                 %s: %s
