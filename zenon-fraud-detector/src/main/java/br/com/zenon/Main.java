@@ -3,15 +3,19 @@ package br.com.zenon;
 import br.com.zenon.fraud.*;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
 
 import static br.com.zenon.fraud.TransactionReport.*;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    static void main() {
+    static String language;
+
+    void main(String[] args) {
+        language = args.length > 0 ? args[0] : "pt";
         List<Transaction> transactions = new TransactionIngestor().read("data/PS_20174392719_1491204439457_log.csv");
 
         runEfficientNioReport();
@@ -29,14 +33,37 @@ public class Main {
     }
 
     private static void runEfficientNioReport() {
+        Locale locale = Locale.of(language);
+
+        NumberFormat integerFormatter = NumberFormat.getIntegerInstance(locale);
+        NumberFormat currencyFormatter = DecimalFormat.getCurrencyInstance(locale);
+
+        String currencyCode = language.equals("pt") ? "BRL" : "USD";
+        currencyFormatter.setCurrency(Currency.getInstance(currencyCode));
+
+        ResourceBundle reportBundle = ResourceBundle.getBundle("report", locale);
+
         TransactionReport transactionReport = new TransactionReport();
         Statistics statistics = transactionReport.generateReport("data/PS_20174392719_1491204439457_log.csv");
 
+        String formattedTotalTransactions = integerFormatter.format(statistics.totalTransactions());
+        String formattedTotalFrauds = integerFormatter.format(statistics.totalFrauds());
+        String formattedTotalAmount = currencyFormatter.format(statistics.totalAmount());
+
+        String msgTotalTransactions = reportBundle.getString("label.total.transactions");
+        String msgTotalFrauds = reportBundle.getString("label.total.frauds");
+        String msgTotalAmount = reportBundle.getString("label.total.amount");
+
         IO.println("""
-                Total de linhas: %d
-                Total de fraudes: %d,
-                Valor total transacionado: %.2f
-                """.formatted(statistics.totalTransactions(), statistics.totalFrauds(), statistics.totalAmount()));
+                %s: %s
+                %s: %s,
+                %s: %s
+                """.formatted(
+                    msgTotalTransactions, formattedTotalTransactions,
+                    msgTotalFrauds, formattedTotalFrauds,
+                    msgTotalAmount, formattedTotalAmount
+                )
+        );
     }
 
     private static void compareRepositoryPerformance(List<Transaction> transactions) {
