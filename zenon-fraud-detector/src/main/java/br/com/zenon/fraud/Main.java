@@ -1,10 +1,6 @@
-package br.com.zenon;
-
-import br.com.zenon.fraud.*;
+package br.com.zenon.fraud;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
 
 import static br.com.zenon.fraud.TransactionReport.*;
