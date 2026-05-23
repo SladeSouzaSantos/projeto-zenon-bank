@@ -20,5 +20,8 @@ public class DBMain {
         long endTime = System.nanoTime();
 
         IO.println("TransactionListRepository Demorou: " + ((endTime - startTime)/1_000_000) + "ms.");
+
+        sqlRepository.findTransactionByName("C1231006815")
+                .ifPresentOrElse(IO::println, () -> IO.println("Transação não encontrada"));
     }
 }

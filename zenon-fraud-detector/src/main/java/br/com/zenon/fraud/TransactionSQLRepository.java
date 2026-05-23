@@ -5,9 +5,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public class TransactionSQLRepository implements TransactionRepository{
+
+    public static final int JDBC_BATCH_SIZE = 1_000;
+
     @Override
     public void save(Transaction transaction) {
         String sql = """
@@ -93,6 +97,65 @@ public class TransactionSQLRepository implements TransactionRepository{
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void saveAll(List<Transaction> transactions){
+        String sql = """
+                INSERT INTO transactions
+                (step, `type`, amount, name_origin, old_balance_origin, new_balance_origin, name_recipient, 
+                old_balance_recipient, new_balance_recipient, is_fraud, is_flagged_fraud)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?);
+                """;
+
+        try (Connection connection = ConnectionFactory.getConnection()){
+            connection.setAutoCommit(false);
+
+            int count = 0;
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql))
+            {
+                for (Transaction transaction : transactions){
+                    preparedStatement.setInt(1, transaction.step());
+                    preparedStatement.setString(2, transaction.type().name());
+                    preparedStatement.setBigDecimal(3, transaction.amount());
+                    preparedStatement.setString(4, transaction.origin().name());
+                    preparedStatement.setBigDecimal(5, transaction.origin().oldBalance());
+                    preparedStatement.setBigDecimal(6, transaction.origin().newBalance());
+                    preparedStatement.setString(7, transaction.destination().name());
+                    preparedStatement.setBigDecimal(8, transaction.destination().oldBalance());
+                    preparedStatement.setBigDecimal(9, transaction.destination().newBalance());
+                    preparedStatement.setBoolean(10, transaction.isFraud());
+                    preparedStatement.setBoolean(11, transaction.isFlaggedFraud());
+
+                    preparedStatement.addBatch();
+                    count++;
+
+                    if(count % JDBC_BATCH_SIZE == 0){
+                        IO.println("Executando batch...");
+
+                        preparedStatement.executeBatch();
+                        connection.commit();
+                    }
+                }
+
+                IO.println("Executando batch final...");
+
+                preparedStatement.executeBatch();
+                connection.commit();
+
+                connection.setAutoCommit(true);
+                
+            }catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException ex) {
+                    throw new RuntimeException("Erro ao executar rollback", ex);
+                }
+
+                throw new RuntimeException("Erro ao salvar nova transação...", e);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro na conexão com o BD...", e);
         }
     }
 }
