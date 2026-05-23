@@ -10,8 +10,6 @@ import java.util.Optional;
 
 public class TransactionSQLRepository implements TransactionRepository{
 
-    public static final int JDBC_BATCH_SIZE = 1_000;
-
     @Override
     public void save(Transaction transaction) {
         String sql = """
@@ -111,7 +109,6 @@ public class TransactionSQLRepository implements TransactionRepository{
         try (Connection connection = ConnectionFactory.getConnection()){
             connection.setAutoCommit(false);
 
-            int count = 0;
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql))
             {
                 for (Transaction transaction : transactions){
@@ -128,14 +125,6 @@ public class TransactionSQLRepository implements TransactionRepository{
                     preparedStatement.setBoolean(11, transaction.isFlaggedFraud());
 
                     preparedStatement.addBatch();
-                    count++;
-
-                    if(count % JDBC_BATCH_SIZE == 0){
-                        IO.println("Executando batch...");
-
-                        preparedStatement.executeBatch();
-                        connection.commit();
-                    }
                 }
 
                 IO.println("Executando batch final...");
